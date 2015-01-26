@@ -83,3 +83,20 @@ test('enter forwarding mode at chunk boundary', function (t) {
     t.deepEqual( r(['hello','hello'],'hello', 'x', {maxOccurances: 1}), ['x', 'hello']);
     t.deepEqual( r(['---hello','hello'],'hello', 'x', {maxOccurances: 1}), ['---', 'x', 'hello']);
 });
+
+test('should handle binary streams', function (t) {
+    t.plan(1);
+
+    t.deepEqual(
+        r(
+            new Buffer([0,1,2,3,4]),
+            new Buffer([2,3]),
+            new Buffer([0xff])
+        ),
+        [
+            new Buffer([0,1]),
+            new Buffer([0xff]), 
+            new Buffer([4])
+        ]
+    );
+});
