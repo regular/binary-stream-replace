@@ -28,3 +28,17 @@ tape('forward should work across buffer boundaries', function(t) {
     f.skip(5);
     t.deepEqual(l, ['x','y']);
 });
+
+tape('flush() should force forwarding, even when called mid-chunk', function(t) {
+    t.plan(2);
+
+    var l = [];
+    var f = fifo(function(d) {l.push(d);});
+    f.addChunk('xxxyyyzzz');
+    f.skip(3);
+    f.forward(3);
+    f.flush();
+    t.deepEqual(l, ['yyy']);
+    f.forward(3);
+    t.deepEqual(l, ['yyy','zzz']);
+});
