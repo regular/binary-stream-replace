@@ -2,9 +2,9 @@ var test = require('tape');
 
 var replacer = require('..');
 
-function r(hay,needle, replace) {
+function r(hay,needle, replace, options) {
     var l= [];
-    var rs = replacer(needle, replace);
+    var rs = replacer(needle, replace, options);
     rs.on('data', function(data) {l.push(data);});
     if (Array.isArray(hay)) {
         hay.forEach(function(b) {
@@ -58,11 +58,28 @@ test('multi-byte needle spread across 3 chunks', function (t) {
 });
 
 test('needle head (requires unwinding)', function (t) {
-    t.plan(5);
+    t.plan(6);
 
     t.deepEqual( r(['h','el', '.stuff.hello'],'hello','x'), ['h', 'el', '.stuff.', 'x']);
     t.deepEqual( r(['---he','l','lhello'],'hello','x'), ['---he','l','l', 'x']);
     t.deepEqual( r(['hel','h','ello', '---'],'hello','x'), ['hel', 'x', '---']);
     t.deepEqual( r(['...h','e','ll///hell','o'],'hello','x'), ['...h', 'e', 'll///', 'x']);
     t.deepEqual( r(['hellhellohell'],'hello','x'), ['hell', 'x', 'hell']);
+    t.deepEqual( r('hhelloo','hello','x'), ['h', 'x', 'o']);
+});
+
+test('enter forwarding mode in the middle of a chunk', function (t) {
+    t.plan(3);
+
+    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurances: 1}), ['x', 'hellohello']);
+    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurances: 2}), ['x', 'x', 'hello']);
+    t.deepEqual( r('hellhellohello','hello', 'x', {maxOccurances: 1}), ['hell','x', 'hello']);
+});
+
+test('enter forwarding mode at chunk boundary', function (t) {
+    t.plan(3);
+
+    t.deepEqual( r(['hellohellohello','hello'],'hello', 'x', {maxOccurances: 3}), ['x','x','x', 'hello']);
+    t.deepEqual( r(['hello','hello'],'hello', 'x', {maxOccurances: 1}), ['x', 'hello']);
+    t.deepEqual( r(['---hello','hello'],'hello', 'x', {maxOccurances: 1}), ['---', 'x', 'hello']);
 });

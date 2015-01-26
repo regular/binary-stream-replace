@@ -17,15 +17,23 @@ var compare = util.compare;
  * with pos = 0 at the next byte.
 */
 
-module.exports = function(needle, replace) {
-
+module.exports = function(needle, replace, options) {
+    options = options || {};
+    var maxOccurances = options.maxOccurances;
     var pin = 0; // pos in needle
     var occurances = 0;
+    var forwarding = false;
     var unsure = 0; // number of bytes that could be part of the needle 
     var fifo = null;
     
     function queueReplacement(stream) {
         stream.queue(replace);
+        occurances++;
+        if (maxOccurances && occurances >= maxOccurances) {
+            fifo.skipRest();
+            fifo.flush();
+            forwarding = true;
+        }
     }
 
     function handleChunk(stream, chunk, pic) {
@@ -88,6 +96,10 @@ module.exports = function(needle, replace) {
     }
 
     function write(chunk) {
+        if (forwarding) {
+            this.queue(chunk);
+            return;
+        }
         if (fifo === null) {
             fifo = Fifo(this.queue.bind(this));
         }
@@ -98,6 +110,15 @@ module.exports = function(needle, replace) {
         while(chunks.length) {
             chunk = chunks.shift();
             for(;;) {
+                if (forwarding) {
+                    if (pic===0) {
+                        this.queue(chunk);
+                    } else {
+                        this.queue(chunk.slice(pic));
+                    }
+                    pic = 0;
+                    break;
+                }
                 pic = handleChunk(this, chunk, pic);
                 if (pic === -1) {
                     var r = fifo.getUnassigned();
