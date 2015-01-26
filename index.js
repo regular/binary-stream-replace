@@ -1,105 +1,119 @@
+var debug = require('debug')('bin-replace-stream');
 var through = require('through');
+var Fifo = require('./lib/fifo');
 var util = require('./lib/util');
 var indexOf = util.indexOf;
 var compare = util.compare;
+
+/* if pin (position in chunk) is zero, we look out
+ * for the first byte of the needle in the chunk.
+ * If found, we continue looking for more needle bytes
+ * until we either found the whole needle or get disappointed.
+ * When we found the whole needle, we flush the fifo, queue the
+ * replacement and continue with pin = 0 at the first byte
+ * after the needle.
+ *
+ * If we get disappointed, we forward one byte and continue
+ * with pos = 0 at the next byte.
+*/
 
 module.exports = function(needle, replace) {
 
     var pin = 0; // pos in needle
     var occurances = 0;
-    var startPos = -1; // potential start of needle in bufferList
-    var bufferList = [];
-
-    function bufferChunk(chunk) {
-        bufferList.push(chunk);
-    }
-    function flushBuffer(stream, len) {
-        var queued = 0;
-        for(var i=0; i<bufferList.length; ++i) {
-            var bl = bufferList[i].length;
-            if (queued >= len) break;
-            if (queued + bl <= len) {
-                queued += bl;
-                stream.queue(bufferList[i]);
-            } else {
-                var missing = len - queued;
-                stream.queue(bufferList[i].slice(0, missing));
-                break;
-            }
-        }
-        bufferList = [];
-    }
+    var unsure = 0; // number of bytes that could be part of the needle 
+    var fifo = null;
     
     function queueReplacement(stream) {
         stream.queue(replace);
     }
 
-    function write(chunk) {
-        pic = 0;
-        for(;;) {
-            console.log('pin',pin,'pic',pic);
-            if (pin === 0) {
-                // does this chunk contain
-                // the first needle byte?
-                startPos = indexOf(chunk, needle[0], pic);
-                console.log('found at',startPos);
-                if (startPos === -1) {
-                    // ne. Fastpath: just forward the cunk
-                    var c = chunk.slice(pic);
-                    if (c.length) this.queue(c);
-                    return;
-                }
-                var old_pic = pic;
-                pic = startPos + 1;
+    function handleChunk(stream, chunk, pic) {
+        if (pin === 0) {     
+            // does this chunk contain
+            // the first needle byte?
+            var s  = indexOf(chunk, needle[0], pic);
+            debug('found first needle byte at %d', s);
+            if (s === -1) {
+                // no. just forward the rest of the chunk
+                fifo.forward(chunk.length - pic);
+                return chunk.length; // new pic
+            }
+            if (needle.length === 1) {
+                // we found the entire needle
+                fifo.forward(s - pic);
+                fifo.skip(1);
+                fifo.flush();
+                queueReplacement(stream);
+                pin = 0;
+                return s + 1; // new pic
+            } else {
+                fifo.forward(s - pic);
                 pin = 1;
-                if (needle.length === 1) {
-                    // we found the entire needle
-                    var c = chunk.slice(old_pic,startPos)
-                    if (c.length) this.queue(c);
-                    queueReplacement(this);
-                    pin = 0;
-                    continue;
-                } 
-                if (chunk.length - pic <= 0) {
-                    // the chunk potentially contains the needle hedd
-                    // we store it for later
-                    return bufferChunk(chunk);
-                }
+                unsure = 1;
+                return s + 1;
             }
-            // Is the rest of the chunk identical to 
-            // the rest of the needle?
-            console.log(needle, chunk, pin, pic);
-            var nl = compare(needle, chunk, pin, pic);
-            if (nl === -1) {
-                // no, we need to start over
-                pin = 0;
-                pic = 0;
-                // queue whole bufferList
-                bufferChunk(chunk);
-                return flushBuffer(this, Number.POSITIVE_INFINITY);
-            }
-            // yes! This looks promising.
-            // is the whole needle contained in the chunk?
-            if (nl === 0) {
-                // YES! This is the chunk containing the needle's tail.
-                // we found the needle. We need to
-                // emit bufferList + chunk[0..startPos)
-                bufferChunk(chunk);
-                flushBuffer(this, startPos);
-                queueReplacement(this);
-                pic += needle.length - pin;
-                pin = 0;
-                continue;
-            }
-            // no, the needle's tail is yet to be found.
-            // we just push the chunk to the bufferList
-            // since we can't decide wheter to forward it or not
-            return bufferChunk(chunk);
+        } // end pin === 0
+
+        // Is the rest of the chunk identical to 
+        // the rest of the needle?
+        var nl = compare(needle, chunk, pin, pic);
+        debug('compare', needle, chunk, pin, pic, 'nl', nl);
+        // is the whole needle contained in the chunk?
+        if (nl === 0) {
+            // YES! This is the chunk containing the needle's tail.
+            // we found the needle. We need to
+            debug('whole needle found.');
+            fifo.skip(needle.length - pin + unsure);
+            fifo.flush();
+            queueReplacement(stream);
+            var newPic = pic + (needle.length - pin);
+            pin = 0;
+            unsure = 0;
+            return newPic; 
         }
+        if (nl > 0) {
+            // we made some progress, but we don't know if we
+            // are in the needle actually
+            unsure += needle.length - pin - nl;
+            return chunk.length;
+        }
+        // this was not the needle!
+        fifo.forward(1);
+        // we need to unwind unsure-1 bytes
+        unsure = 0;
+        pin = 0;
+        return -1; // unwind
     }
 
+    function write(chunk) {
+        if (fifo === null) {
+            fifo = Fifo(this.queue.bind(this));
+        }
+        fifo.addChunk(chunk);
+        var chunks = [chunk];
+        var pic = 0;
+
+        while(chunks.length) {
+            chunk = chunks.shift();
+            for(;;) {
+                pic = handleChunk(this, chunk, pic);
+                if (pic === -1) {
+                    var r = fifo.getUnassigned();
+                    pic = r.pic;
+                    chunks = r.chunks;
+                    break;
+                }
+                if (pic === chunk.length) {
+                    pic = 0;
+                    break;
+                }
+            }
+        }
+    }
+        
     function end() {
-        flushBuffer(this, Number.POSITIVE_INFINITY);
+        fifo.flush();  
     }
     
     return through(write, end);
