@@ -4,7 +4,7 @@
   "description": "efficiently replace a sequence of bytes in a stream with a different sequence of bytes, either n times or all occurances.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/test.js | tap-prettify -"
+    "test": "tap-prettify test"
   },
   "keywords": [
     "stream",
