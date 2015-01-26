@@ -76,6 +76,7 @@ module.exports = function(needle, replace) {
             // we made some progress, but we don't know if we
             // are in the needle actually
             unsure += needle.length - pin - nl;
+            pin += needle.length - pin - nl;
             return chunk.length;
         }
         // this was not the needle!
