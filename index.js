@@ -114,6 +114,7 @@ module.exports = function(needle, replace) {
     }
         
     function end() {
+        fifo.forwardRest();
         fifo.flush();  
     }
     

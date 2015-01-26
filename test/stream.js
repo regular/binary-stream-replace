@@ -13,6 +13,7 @@ function r(hay,needle, replace) {
     } else {
         rs.write(hay);
     }
+    rs.end();
     return l;
 }
 
@@ -44,4 +45,24 @@ test('multi-byte needle spread across 2 chunks', function (t) {
     t.deepEqual( r(['a','aa---'],'aaa','x'), ['x', '---']);
     t.deepEqual( r(['...a','aa---'],'aaa','x'), ['...', 'x', '---']);
     t.deepEqual( r('...ababba---','aba','x'), ['...', 'x', 'bba---']);
+});
+
+test('multi-byte needle spread across 3 chunks', function (t) {
+    t.plan(5);
+
+    t.deepEqual( r(['h','el', 'lo.stuff'],'hello','x'), ['x', '.stuff']);
+    t.deepEqual( r(['---he','l','lo'],'hello','x'), ['---', 'x']);
+    t.deepEqual( r(['hel','l','o', '---'],'hello','x'), ['x', '---']);
+    t.deepEqual( r(['...h','e','llo///'],'hello','x'), ['...', 'x', '///']);
+    t.deepEqual( r(['...','h','e','llo---'],'hello','x'), ['...', 'x', '---']);
+});
+
+test('needle head (requires unwinding)', function (t) {
+    t.plan(5);
+
+    t.deepEqual( r(['h','el', '.stuff.hello'],'hello','x'), ['h', 'el', '.stuff.', 'x']);
+    t.deepEqual( r(['---he','l','lhello'],'hello','x'), ['---he','l','l', 'x']);
+    t.deepEqual( r(['hel','h','ello', '---'],'hello','x'), ['hel', 'x', '---']);
+    t.deepEqual( r(['...h','e','ll///hell','o'],'hello','x'), ['...h', 'e', 'll///', 'x']);
+    t.deepEqual( r(['hellhellohell'],'hello','x'), ['hell', 'x', 'hell']);
 });
