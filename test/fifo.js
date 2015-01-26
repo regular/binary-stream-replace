@@ -42,3 +42,32 @@ tape('flush() should force forwarding, even when called mid-chunk', function(t) 
     f.forward(3);
     t.deepEqual(l, ['yyy','zzz']);
 });
+
+tape('getUnassigned() should return unassigned chunks', function(t) {
+    t.plan(4);
+
+    var f = fifo(function(d) {});
+    f.addChunk('xxxyyyzzz');
+    f.skip(3);
+    t.deepEqual(f.getUnassigned(), {
+        chunks: ['xxxyyyzzz'],
+        pic: 3});
+
+    f.addChunk('111');
+
+    t.deepEqual(f.getUnassigned(), {
+        chunks: ['xxxyyyzzz', '111'],
+        pic: 3});
+
+    f.skip(7);
+
+    t.deepEqual(f.getUnassigned(), {
+        chunks: ['111'],
+        pic: 1});
+
+    f.forward(2);
+
+    t.deepEqual(f.getUnassigned(), {
+        chunks: [],
+        pic: 0});
+});
