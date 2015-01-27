@@ -1,3 +1,4 @@
+[![npm version](https://badge.fury.io/js/binary-stream-replace.svg)](http://badge.fury.io/js/binary-stream-replace)
 [![browser support](https://ci.testling.com/regular/binary-stream-replace.png)](https://ci.testling.com/regular/binary-stream-replace)
 
 binary-stream-replace
