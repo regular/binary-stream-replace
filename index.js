@@ -19,9 +19,9 @@ var compare = util.compare;
 
 module.exports = function(needle, replace, options) {
     options = options || {};
-    var maxOccurances = options.maxOccurances;
+    var maxOccurrences = options.maxOccurrences;
     var pin = 0; // pos in needle
-    var occurances = 0;
+    var occurrences = 0;
     var forwarding = false;
     var unsure = 0; // number of bytes that could be part of the needle 
     var fifo = null;
@@ -29,8 +29,8 @@ module.exports = function(needle, replace, options) {
     function queueReplacement(stream) {
         debug('queueing replacement %s %s', typeof replace, replace);
         stream.queue(replace);
-        occurances++;
-        if (maxOccurances && occurances >= maxOccurances) {
+        occurrences++;
+        if (maxOccurrences && occurrences >= maxOccurrences) {
             fifo.skipRest();
             fifo.flush();
             forwarding = true;

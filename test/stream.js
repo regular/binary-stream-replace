@@ -71,17 +71,17 @@ test('needle head (requires unwinding)', function (t) {
 test('enter forwarding mode in the middle of a chunk', function (t) {
     t.plan(3);
 
-    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurances: 1}), ['x', 'hellohello']);
-    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurances: 2}), ['x', 'x', 'hello']);
-    t.deepEqual( r('hellhellohello','hello', 'x', {maxOccurances: 1}), ['hell','x', 'hello']);
+    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurrences: 1}), ['x', 'hellohello']);
+    t.deepEqual( r('hellohellohello','hello', 'x', {maxOccurrences: 2}), ['x', 'x', 'hello']);
+    t.deepEqual( r('hellhellohello','hello', 'x', {maxOccurrences: 1}), ['hell','x', 'hello']);
 });
 
 test('enter forwarding mode at chunk boundary', function (t) {
     t.plan(3);
 
-    t.deepEqual( r(['hellohellohello','hello'],'hello', 'x', {maxOccurances: 3}), ['x','x','x', 'hello']);
-    t.deepEqual( r(['hello','hello'],'hello', 'x', {maxOccurances: 1}), ['x', 'hello']);
-    t.deepEqual( r(['---hello','hello'],'hello', 'x', {maxOccurances: 1}), ['---', 'x', 'hello']);
+    t.deepEqual( r(['hellohellohello','hello'],'hello', 'x', {maxOccurrences: 3}), ['x','x','x', 'hello']);
+    t.deepEqual( r(['hello','hello'],'hello', 'x', {maxOccurrences: 1}), ['x', 'hello']);
+    t.deepEqual( r(['---hello','hello'],'hello', 'x', {maxOccurrences: 1}), ['---', 'x', 'hello']);
 });
 
 test('should handle binary streams', function (t) {

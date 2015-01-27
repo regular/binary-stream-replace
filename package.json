@@ -1,10 +1,10 @@
 {
   "name": "binary-stream-replace",
   "version": "1.0.0",
-  "description": "efficiently replace a sequence of bytes in a stream with a different sequence of bytes, either first n occurances or all occurances.",
+  "description": "efficiently replace a sequence of bytes in a binary or text stream with a different sequence of bytes. Can be restricted to first n occurrences only.",
   "main": "index.js",
   "scripts": {
-    "test": "tap-prettify test"
+    "test": "tape test/*.js"
   },
   "keywords": [
     "stream",
@@ -16,10 +16,10 @@
   "license": "ISC",
   "devDependencies": {
     "tape": "^3.2.0",
-    "tap-prettify": "0.0.2",
     "concat-stream": "^1.4.7"
   },
   "dependencies": {
-    "through": "^2.3.6"
+    "through": "^2.3.6",
+    "debug": "^2.1.1"
   }
 }
