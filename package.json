@@ -1,6 +1,6 @@
 {
   "name": "binary-stream-replace",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "efficiently replace a sequence of bytes in a binary or text stream with a different sequence of bytes. Can be restricted to first n occurrences only.",
   "main": "index.js",
   "scripts": {
