@@ -27,6 +27,7 @@ module.exports = function(needle, replace, options) {
     var fifo = null;
     
     function queueReplacement(stream) {
+        debug('queueing replacement %s %s', typeof replace, replace);
         stream.queue(replace);
         occurances++;
         if (maxOccurances && occurances >= maxOccurances) {
@@ -66,7 +67,7 @@ module.exports = function(needle, replace, options) {
         // Is the rest of the chunk identical to 
         // the rest of the needle?
         var nl = compare(needle, chunk, pin, pic);
-        debug('compare', needle, chunk, pin, pic, 'nl', nl);
+        //debug('compare', needle, chunk, pin, pic, 'nl', nl);
         // is the whole needle contained in the chunk?
         if (nl === 0) {
             // YES! This is the chunk containing the needle's tail.
@@ -96,7 +97,9 @@ module.exports = function(needle, replace, options) {
     }
 
     function write(chunk) {
+        debug('client writes %s of len %d', typeof chunk, chunk.length);
         if (forwarding) {
+            debug('forwarding %s', typeof chunk);
             this.queue(chunk);
             return;
         }
@@ -112,8 +115,10 @@ module.exports = function(needle, replace, options) {
             for(;;) {
                 if (forwarding) {
                     if (pic===0) {
-                        this.queue(chunk);
+                            debug('forwarding %s', typeof chunk);
+                            this.queue(chunk);
                     } else {
+                        debug('forwarding %s', typeof chunk);
                         this.queue(chunk.slice(pic));
                     }
                     pic = 0;

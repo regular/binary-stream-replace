@@ -1,7 +1,7 @@
 {
   "name": "binary-stream-replace",
   "version": "1.0.0",
-  "description": "efficiently replace a sequence of bytes in a stream with a different sequence of bytes, either n times or all occurances.",
+  "description": "efficiently replace a sequence of bytes in a stream with a different sequence of bytes, either first n occurances or all occurances.",
   "main": "index.js",
   "scripts": {
     "test": "tap-prettify test"
@@ -12,12 +12,11 @@
     "browserify",
     "replace"
   ],
-  "author": "Jan Bölsche",
+  "author": "Jan Bölsche <jan@lagomorph.de>",
   "license": "ISC",
   "devDependencies": {
     "tape": "^3.2.0",
     "tap-prettify": "0.0.2",
-    "from": "^0.1.3",
     "concat-stream": "^1.4.7"
   },
   "dependencies": {

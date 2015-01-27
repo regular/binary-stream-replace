@@ -8,7 +8,6 @@ function compare(t, encoding, file1, file2, n, r, o) {
     var src = fs.createReadStream(path.join(__dirname, 'fixtures', file1), {encoding:encoding});
     var rs = Rs(n, r, o);
     var cs = Cs(function(data) {
-        console.log(typeof data);
         var d2 = fs.readFileSync(path.join(__dirname, 'fixtures', file2), encoding);
         t.deepEqual(data, d2);
     });
@@ -30,12 +29,12 @@ test('should change first 6 occurances of "of" to "0ffer"', function(t) {
     compare(t, 'utf-8', 'lorem.txt', '6x0ffer.txt', 'of', '0ffer', {maxOccurances: 6});
 });
 
-test('hould not alter a binary stream', function(t) {
+test('should not alter a binary stream', function(t) {
     t.plan(1);
-    compare(t, 'binary', 'random.bin', 'random.bin', new Buffer([0xff,0xff,0xff,0xff]), new Buffer([0x00]));
+    compare(t, null, 'random.bin', 'random.bin', new Buffer([0xff,0xff,0xff,0xff]), new Buffer([0x00]));
 });
 
 test('should replace all occurances of 0xff with 0x00 in a binary file', function(t) {
     t.plan(1);
-    compare(t, 'binary', 'random.bin', 'ffto00.bin', new Buffer([0xff]), new Buffer([0x00]));
+    compare(t, null, 'random.bin', 'ffto00.bin', new Buffer([0xff]), new Buffer([0x00]));
 });
