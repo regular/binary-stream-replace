@@ -1,3 +1,5 @@
+[![browser support](https://ci.testling.com/regular/binary-stream-replace.png)](https://ci.testling.com/regular/binary-stream-replace)
+
 binary-stream-replace
 ===
 A transform-stream for Node and browsers that efficeintly replaces sequences of bytes in a binary stream. Can be restricted to replace first n occurrences only.
