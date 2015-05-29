@@ -17,6 +17,12 @@ function r(hay,needle, replace, options) {
     return l;
 }
 
+test('empty haystack', function(t) {
+    t.plan(1);
+
+    t.deepEqual(r([], 'a', 'x'), []);
+});
+
 test('single-byte needle', function (t) {
     t.plan(5);  
 
