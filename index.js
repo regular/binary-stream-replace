@@ -140,8 +140,10 @@ module.exports = function(needle, replace, options) {
     }
         
     function end() {
-        fifo.forwardRest();
-        fifo.flush();  
+        if (fifo) {
+            fifo.forwardRest();
+            fifo.flush();     
+        }
         this.queue(null);
     }
     
